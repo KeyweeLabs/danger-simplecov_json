@@ -38,35 +38,30 @@ module Danger
     # added or modified in git
     # @return [void]
     #
-    def individual_report(coverage_path, current_project_path)
-      if File.exist? coverage_path
-        committed_files = git.modified_files + git.added_files
+    def individual_report(coverage_path, files_matcher: nil)
+      fail('Code coverage data not found') unless File.exist? coverage_path
 
-        unless current_project_path.nil?
-          committed_files = committed_files.map do |s|
-            current_project_path + '/' + s
-          end
+      committed_files = git.modified_files + git.added_files
+
+      coverage_report_files = JSON.parse(File.read(coverage_path), symbolize_names: true).fetch(:files)
+      matched_files_with_coverage = coverage_report_files.select do |f|
+        if files_matcher.nil?
+          committed_files.include?(f[:filename])
+        else
+          files_matcher.call(committed_files, f[:filename])
         end
-
-        covered_files = JSON.parse(File.read(coverage_path), symbolize_names: true)[:files]
-                            .select { |f| committed_files.include?(f[:filename]) }
-
-        unless current_project_path.nil?
-          covered_files.each { |f| f[:filename].sub!(%r{^#{current_project_path}/?}, '') }
-        end
-
-        return if covered_files.nil? || covered_files.empty?
-        markdown individual_coverage_message(covered_files)
-      else
-        fail('Code coverage data not found')
       end
+
+      return if matched_files_with_coverage.empty?
+
+      markdown render_coverage_table(matched_files_with_coverage)
     end
 
     # Builds the markdown table displaying coverage on individual files
     # @param [Array] covered_files
     # @return [String] Markdown table
     #
-    def individual_coverage_message(covered_files)
+    private def render_coverage_table(covered_files)
       require 'terminal-table'
 
       message = "### Code Coverage\n\n"
