@@ -4,16 +4,15 @@ module Danger
   #
   # Report your Ruby app test suite code coverage.
   #
-  # You can use [simplecov](https://github.com/colszowka/simplecov) to gather
-  # code coverage data and a [json formatter](https://github.com/vicentllongo/simplecov-json)
+  # You can use {https://github.com/colszowka/simplecov simplecov} to gather
+  # code coverage data and a {https://github.com/vicentllongo/simplecov-json json formatter}
   # so this plugin can parse it.
   #
   # @example Report code coverage
-  #
   #   simplecov.report('coverage/coverage.json')
   #   simplecov.individual_report('coverage/coverage.json', Dir.pwd)
   #
-  # @see  marcelofabri/danger-simplecov_json
+  # @see  https://github.com/marcelofabri/danger-simplecov_json
   # @tags ruby, code-coverage, simplecov
   #
   class DangerSimpleCovJson < Plugin
@@ -22,7 +21,7 @@ module Danger
     end
 
     #
-    # Report full code coverage information as a message in Danger
+    # Report full code coverage information as a message
     #
     # @param coverage_path [String] path to the project coverage json report
     # @param sticky [Boolean] whether to make danger message sticky or not
@@ -44,7 +43,7 @@ module Danger
     end
 
     #
-    # Report on the files that you have added or modified in git.
+    # Report on the files that you have added or modified in git as a markdown table message
     #
     # @param coverage_path [String] path to the project coverage json report
     # @param files_matcher: [nil, Proc] Optional matcher to match between commited files and coverage data.
