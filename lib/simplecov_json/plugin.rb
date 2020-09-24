@@ -1,23 +1,32 @@
+# frozen_string_literal: true
+
 module Danger
+  #
   # Report your Ruby app test suite code coverage.
   #
-  # You can use [simplecov](https://github.com/colszowka/simplecov) to
-  # gather code coverage data and a
-  # [json formatter](https://github.com/vicentllongo/simplecov-json) so
-  # this plugin can parse it.
+  # You can use [simplecov](https://github.com/colszowka/simplecov) to gather
+  # code coverage data and a [json formatter](https://github.com/vicentllongo/simplecov-json)
+  # so this plugin can parse it.
   #
   # @example Report code coverage
   #
-  #          simplecov.report('coverage/coverage.json')
-  #          simplecov.individual_report('coverage/coverage.json', Dir.pwd)
+  #   simplecov.report('coverage/coverage.json')
+  #   simplecov.individual_report('coverage/coverage.json', Dir.pwd)
   #
   # @see  marcelofabri/danger-simplecov_json
   # @tags ruby, code-coverage, simplecov
   #
   class DangerSimpleCovJson < Plugin
-    # Parse a JSON code coverage file and report that information as a
-    # message in Danger.
-    # @return  [void]
+    def self.instance_name
+      'simplecov'
+    end
+
+    #
+    # Report full code coverage information as a message in Danger
+    #
+    # @param coverage_path [String] path to the project coverage json report
+    # @param sticky [Boolean] whether to make danger message sticky or not
+    # @return void
     #
     def report(coverage_path, sticky: true)
       if File.exist? coverage_path
@@ -34,9 +43,15 @@ module Danger
       end
     end
 
-    # Parse a JSON code coverage file and report on the files that you have
-    # added or modified in git
-    # @return [void]
+    #
+    # Report on the files that you have added or modified in git.
+    #
+    # @param coverage_path [String] path to the project coverage json report
+    # @param files_matcher: [nil, Proc] Optional matcher to match between commited files and coverage data.
+    #   First param is a list of commited files.
+    #   Second param is a single string file name from coverage report.
+    #   Should return either true or false, matches on true.
+    # @return void
     #
     def individual_report(coverage_path, files_matcher: nil)
       fail('Code coverage data not found') unless File.exist? coverage_path
@@ -57,10 +72,6 @@ module Danger
       markdown render_coverage_table(matched_files_with_coverage)
     end
 
-    # Builds the markdown table displaying coverage on individual files
-    # @param [Array] covered_files
-    # @return [String] Markdown table
-    #
     private def render_coverage_table(covered_files)
       require 'terminal-table'
 
@@ -73,10 +84,6 @@ module Danger
         end
       ).to_s
       message + table.split("\n")[1..-2].join("\n")
-    end
-
-    def self.instance_name
-      'simplecov'
     end
   end
 end

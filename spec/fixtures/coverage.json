@@ -2,7 +2,9 @@
    "timestamp":1471917899,
    "command_name":"RSpec",
    "files":[
-     { "filename": "another_ruby_file.rb", "covered_percent": 20.0 }
+     { "filename": "foo.rb", "covered_percent": 20.0 },
+     { "filename": "bar.rb", "covered_percent": 40.0 },
+     { "filename": "baz.rb", "covered_percent": 60.0 }
    ],
    "metrics":{
       "covered_percent":99.14754098360656,
