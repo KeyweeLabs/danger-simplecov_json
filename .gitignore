@@ -1,5 +1,11 @@
-Gemfile.lock
+# YARD documentation
+.yardoc
+doc
 
+# dotfiles
 .DS_Store
-pkg
 .idea/
+
+# other
+Gemfile.lock
+pkg
