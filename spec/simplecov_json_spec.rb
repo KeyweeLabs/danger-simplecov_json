@@ -38,7 +38,7 @@ RSpec.describe Danger::DangerSimpleCovJson do
       allow(@simplecov.git).to receive(:modified_files).and_return([])
 
       @simplecov.individual_report('spec/fixtures/coverage.json')
-      expect(@dangerfile.status_report[:markdowns][0].message).to eq <<~MSG.strip
+      expect(@dangerfile.status_report.fetch(:markdowns).first.message).to eq <<~MSG.strip
         ### Code Coverage
 
         | File   | Coverage |
@@ -52,7 +52,7 @@ RSpec.describe Danger::DangerSimpleCovJson do
       allow(@simplecov.git).to receive(:modified_files).and_return(['bar.rb'])
 
       @simplecov.individual_report('spec/fixtures/coverage.json')
-      expect(@dangerfile.status_report[:markdowns][0].message).to eq <<~MSG.strip
+      expect(@dangerfile.status_report.fetch(:markdowns).first.message).to eq <<~MSG.strip
         ### Code Coverage
 
         | File   | Coverage |
@@ -72,13 +72,92 @@ RSpec.describe Danger::DangerSimpleCovJson do
 
         @simplecov.individual_report('spec/fixtures/coverage.json', files_matcher: matcher)
 
-        expect(@dangerfile.status_report[:markdowns][0].message).to eq <<~MSG.strip
+        expect(@dangerfile.status_report.fetch(:markdowns).first.message).to eq <<~MSG.strip
           ### Code Coverage
 
           | File   | Coverage |
           |--------|----------|
           | bar.rb | 40.00%   |
           | baz.rb | 60.00%   |
+        MSG
+      end
+    end
+
+    context 'with minimum_coverage_by_file option' do
+      it 'fails when files do not pass min threshold' do
+        allow(@simplecov.git).to receive(:added_files).and_return(['foo.rb'])
+        allow(@simplecov.git).to receive(:modified_files).and_return([])
+
+        @simplecov.individual_report('spec/fixtures/coverage.json', minimum_coverage_by_file: 90)
+
+        expect(@dangerfile.status_report[:errors]).to eq(['Some files do not pass minimum coverage'])
+      end
+
+      it 'shows "check mark" next to the file with coverage equal to min threshold' do
+        allow(@simplecov.git).to receive(:added_files).and_return(['foo.rb'])
+        allow(@simplecov.git).to receive(:modified_files).and_return([])
+
+        @simplecov.individual_report('spec/fixtures/coverage.json', minimum_coverage_by_file: 20)
+
+        expect(@dangerfile.status_report.fetch(:markdowns).first.message).to eq <<~MSG.strip
+          ### Code Coverage
+
+          |   | File   | Coverage |
+          |---|--------|----------|
+          | ✓ | foo.rb | 20.00%   |
+        MSG
+      end
+
+      it 'shows "check mark" next to the file with coverage greater than min threshold' do
+        allow(@simplecov.git).to receive(:added_files).and_return(['bar.rb'])
+        allow(@simplecov.git).to receive(:modified_files).and_return([])
+
+        @simplecov.individual_report('spec/fixtures/coverage.json', minimum_coverage_by_file: 20)
+
+        expect(@dangerfile.status_report.fetch(:markdowns).first.message).to eq <<~MSG.strip
+          ### Code Coverage
+
+          |   | File   | Coverage |
+          |---|--------|----------|
+          | ✓ | bar.rb | 40.00%   |
+        MSG
+      end
+
+      it 'shows "cross mark" next to the file with coverage greater than min threshold' do
+        allow(@simplecov.git).to receive(:added_files).and_return(%w[foo.rb bar.rb baz.rb])
+        allow(@simplecov.git).to receive(:modified_files).and_return([])
+
+        @simplecov.individual_report('spec/fixtures/coverage.json', minimum_coverage_by_file: 40.0)
+
+        expect(@dangerfile.status_report.fetch(:markdowns).first.message).to eq <<~MSG.strip
+          ### Code Coverage
+
+          |   | File   | Coverage |
+          |---|--------|----------|
+          | ✗ | foo.rb | 20.00%   |
+          | ✓ | bar.rb | 40.00%   |
+          | ✓ | baz.rb | 60.00%   |
+        MSG
+      end
+
+      it 'allows to pass custom predicate to decide whether coverage is above min threshold' do
+        allow(@simplecov.git).to receive(:added_files).and_return(%w[foo.rb bar.rb baz.rb])
+        allow(@simplecov.git).to receive(:modified_files).and_return([])
+
+        predicate = lambda do |filename, covered_percent|
+          filename == 'foo.rb' ? true : covered_percent.to_f >= 60.0
+        end
+
+        @simplecov.individual_report('spec/fixtures/coverage.json', minimum_coverage_by_file: predicate)
+
+        expect(@dangerfile.status_report.fetch(:markdowns).first.message).to eq <<~MSG.strip
+          ### Code Coverage
+
+          |   | File   | Coverage |
+          |---|--------|----------|
+          | ✓ | foo.rb | 20.00%   |
+          | ✗ | bar.rb | 40.00%   |
+          | ✓ | baz.rb | 60.00%   |
         MSG
       end
     end

@@ -16,6 +16,12 @@ module Danger
   # @tags ruby, code-coverage, simplecov
   #
   class DangerSimpleCovJson < Plugin
+
+    CHECK_MARK = "\u2713"
+    BALLOT_X = "\u2717"
+
+    FileCoverage = Struct.new(:filename, :covered_percent, :passed_min_threshold)
+
     def self.instance_name
       'simplecov'
     end
@@ -52,37 +58,93 @@ module Danger
     #   Should return either true or false, matches on true.
     # @return void
     #
-    def individual_report(coverage_path, files_matcher: nil)
-      fail('Code coverage data not found') unless File.exist? coverage_path
+    def individual_report(
+      coverage_path,
+      files_matcher: nil,
+      minimum_coverage_by_file: nil
+    )
+      fail 'Code coverage data not found' unless File.exist? coverage_path
 
+      coverage_files = collect_coverage_files(coverage_path, files_matcher)
+      return if coverage_files.empty?
+
+      files = map_coverage_files(coverage_files, minimum_coverage_by_file)
+      below_threshold = files.detect { |f| !f.passed_min_threshold }
+
+      if minimum_coverage_by_file.nil?
+        markdown render_simple_coverage_table(files)
+      else
+        markdown render_coverage_table_with_threshold_mark(files)
+        fail 'Some files do not pass minimum coverage' unless below_threshold.nil?
+      end
+    end
+
+    private def collect_coverage_files(coverage_path, files_matcher)
       committed_files = git.modified_files + git.added_files
-
       coverage_report_files = JSON.parse(File.read(coverage_path), symbolize_names: true).fetch(:files)
-      matched_files_with_coverage = coverage_report_files.select do |f|
+
+      coverage_report_files.select do |f|
         if files_matcher.nil?
           committed_files.include?(f[:filename])
         else
           files_matcher.call(committed_files, f[:filename])
         end
       end
-
-      return if matched_files_with_coverage.empty?
-
-      markdown render_coverage_table(matched_files_with_coverage)
     end
 
-    private def render_coverage_table(covered_files)
+    private def map_coverage_files(coverage_files, minimum_coverage_by_file)
+      threshold_predicate =
+        case minimum_coverage_by_file
+        when Float, Integer
+          proc { |filename, covered_percent| covered_percent >= minimum_coverage_by_file }
+        when Proc
+          minimum_coverage_by_file
+        when NilClass
+          proc { true }
+        else
+          raise 'Expected minimum_coverage_by_file to be either Integer or a Proc'
+        end
+
+      coverage_files.map do |f|
+        filename             = f[:filename]
+        covered_percent      = f[:covered_percent].to_f
+        passed_min_threshold = threshold_predicate.call(filename, covered_percent)
+
+        FileCoverage.new(filename, covered_percent, passed_min_threshold)
+      end
+    end
+
+    private def render_simple_coverage_table(files)
       require 'terminal-table'
 
       message = "### Code Coverage\n\n"
       table = Terminal::Table.new(
-        headings: %w(File Coverage),
+        headings: ['File', 'Coverage'],
         style: { border_i: '|' },
-        rows: covered_files.map do |file|
-          [file[:filename], "#{format('%.02f', file[:covered_percent])}%"]
-        end
+        rows: files.map { |f| [f.filename, "#{format('%.02f', f.covered_percent)}%"] }
       ).to_s
+
       message + table.split("\n")[1..-2].join("\n")
     end
+
+    private def render_coverage_table_with_threshold_mark(files)
+      require 'terminal-table'
+
+      message = "### Code Coverage\n\n"
+      table = Terminal::Table.new(
+        headings: [' ', 'File', 'Coverage'],
+        style: { border_i: '|' },
+        rows: (files.map do |f|
+          [
+            (f.passed_min_threshold ? CHECK_MARK : BALLOT_X),
+            f.filename,
+            "#{format('%.02f', f.covered_percent)}%"
+          ]
+        end)
+      ).to_s
+
+      message + table.split("\n")[1..-2].join("\n")
+    end
+
   end
 end
