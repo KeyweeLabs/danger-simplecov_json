@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module SimpleCovJson
-  VERSION = '0.3.0'.freeze
+  VERSION = '1.1.0'
 end
