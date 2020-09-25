@@ -9,3 +9,4 @@ doc
 # other
 Gemfile.lock
 pkg
+tmp

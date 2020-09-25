@@ -1,30 +1,76 @@
-# kind_of? is a good way to check a type
-Style/ClassCheck:
-  EnforcedStyle: kind_of?
+---
 
-# It's better to be more explicit about the type
-Style/BracesAroundHashParameters:
-  Enabled: false
+# For default configs check out following link
+# https://github.com/rubocop-hq/rubocop/blob/master/config/default.yml
+
+AllCops:
+  NewCops: enable
+  TargetRubyVersion: 2.4
+
+#-----------------------------------------------------------
+# Layout
+#-----------------------------------------------------------
+
+Layout/LineLength:
+  Max: 120
+
+#-----------------------------------------------------------
+# Lint
+#-----------------------------------------------------------
 
 # specs sometimes have useless assignments, which is fine
 Lint/UselessAssignment:
   Exclude:
-    - '**/spec/**/*'
-
-# HoundCI doesn't like this rule
-Style/DotPosition:
-  Enabled: false
+    - 'spec/**/*'
 
 # Cop supports --auto-correct.
 Lint/UnusedBlockArgument:
   Enabled: false
 
+#-----------------------------------------------------------
+# Metrics
+#-----------------------------------------------------------
+
+Metrics/AbcSize:
+  Max: 30 # default is 15
+
+Metrics/BlockLength:
+  Exclude:
+    - 'spec/**/*'
+
+Metrics/ClassLength:
+  Max: 320
+
+Metrics/CyclomaticComplexity:
+  Max: 10 # default is 6
+
+Metrics/ParameterLists:
+  Max: 4
+  CountKeywordArgs: false
+
+Metrics/PerceivedComplexity:
+  Max: 10 # default is 7
+
+Metrics/MethodLength:
+  Max: 20 # default is 10
+
+#-----------------------------------------------------------
+# Style
+#-----------------------------------------------------------
+
+Style/AccessModifierDeclarations:
+  EnforcedStyle: inline
+
+# kind_of? is a good way to check a type
+Style/ClassCheck:
+  EnforcedStyle: kind_of?
+
 # We want to allow class Fastlane::Class
 Style/ClassAndModuleChildren:
   Enabled: false
 
-Metrics/AbcSize:
-  Max: 60
+Style/FormatStringToken:
+  Enabled: false
 
 # The %w might be confusing for new users
 Style/WordArray:
@@ -42,24 +88,6 @@ Style/RedundantReturn:
 Style/IfUnlessModifier:
   Enabled: false
 
-# Configuration parameters: CountComments.
-Metrics/ClassLength:
-  Max: 320
-
-Metrics/CyclomaticComplexity:
-  Max: 17
-
-# Configuration parameters: AllowURI, URISchemes.
-Metrics/LineLength:
-  Max: 120
-
-# Configuration parameters: CountKeywordArgs.
-Metrics/ParameterLists:
-  Max: 10
-
-Metrics/PerceivedComplexity:
-  Max: 18
-
 # Sometimes it's easier to read without guards
 Style/GuardClause:
   Enabled: false
@@ -72,9 +100,6 @@ Style/ConditionalAssignment:
 # Better to have too much self than missing a self
 Style/RedundantSelf:
   Enabled: false
-
-Metrics/MethodLength:
-  Max: 60
 
 # We're not there yet
 Style/Documentation:

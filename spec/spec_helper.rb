@@ -1,11 +1,7 @@
-require 'pathname'
-ROOT = Pathname.new(File.expand_path('../../', __FILE__))
-$LOAD_PATH.unshift((ROOT + 'lib').to_s)
-$LOAD_PATH.unshift((ROOT + 'spec').to_s)
+# frozen_string_literal: true
 
 require 'bundler/setup'
 require 'pry'
-
 require 'rspec'
 require 'danger'
 

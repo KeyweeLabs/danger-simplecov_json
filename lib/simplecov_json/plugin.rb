@@ -16,7 +16,6 @@ module Danger
   # @tags ruby, code-coverage, simplecov
   #
   class DangerSimpleCovJson < Plugin
-
     CHECK_MARK = "\u2713"
     BALLOT_X = "\u2717"
 
@@ -58,11 +57,7 @@ module Danger
     #   Should return either true or false, matches on true.
     # @return void
     #
-    def individual_report(
-      coverage_path,
-      files_matcher: nil,
-      minimum_coverage_by_file: nil
-    )
+    def individual_report(coverage_path, files_matcher: nil, minimum_coverage_by_file: nil)
       fail 'Code coverage data not found' unless File.exist? coverage_path
 
       coverage_files = collect_coverage_files(coverage_path, files_matcher)
@@ -145,6 +140,5 @@ module Danger
 
       message + table.split("\n")[1..-2].join("\n")
     end
-
   end
 end
