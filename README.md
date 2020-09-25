@@ -32,6 +32,22 @@ To see the table with individual file coverage for new or modified files add thi
 simplecov.individual_report('coverage/coverage.json')
 ```
 
+You can specify minimum file coverage by file and fail the danger when unmet:
+
+```ruby
+simplecov.individual_report('coverage/coverage.json', minimum_coverage_by_file: 99.9)
+```
+
+By default it will check coverage of all files that were matched but if you have more exoctic use cases, e.g. you want to exclude legacy files and only enforce it on new files you can pass a proc object instead:
+
+```ruby
+predicate = lambda do |filename, covered_percent|
+  git.added_files.include?(filename) ? covered_percent >= 80 : true
+end
+
+simplecov.individual_report('coverage/coverage.json', minimum_coverage_by_file: predicate)
+```
+
 Additionally, you can pass custom file matcher to match between commited files and files reported in coverage report:
 
 ```ruby
